@@ -1,0 +1,13 @@
+{
+  "$schema": "https://langchain-ai.github.io/langgraph/schemas/langgraph.config.schema.json",
+  "node_version": "20",
+  "dockerfile_lines": [],
+  "dependencies": ["."],
+  "graphs": {
+    "market_intel": "./src/graphs/market-intel.js:graph",
+    "news_analysis": "./src/graphs/news-analysis.js:graph",
+    "trading": "./src/graphs/trading.js:graph",
+    "dflow_swap": "./src/graphs/dflow-swap.js:graph"
+  },
+  "env": ".env"
+}

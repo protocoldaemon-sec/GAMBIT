@@ -1,0 +1,8 @@
+node_modules/
+.env
+keys/
+*.key
+*.log
+
+# LangGraph API
+.langgraph_api
