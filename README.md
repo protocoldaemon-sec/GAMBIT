@@ -1,495 +1,414 @@
 # Gambit
 
-Federated Multi-Agent System for Prediction Market Trading on Kalshi via DFlow.
+**Federated Multi-Agent System for Prediction Market Trading**
+
+Gambit is an AI-powered quantitative trading system for prediction markets on [Kalshi](https://kalshi.com) with on-chain settlement via [DFlow](https://dflow.net). It combines institutional-grade quantitative methods with modern AI capabilities to automate market analysis, risk management, and trade execution.
+
+---
 
 ## Overview
 
-Gambit is an AI-powered quantitative trading system:
-
-- **Continuous Learning**: 24/7 model retraining daemon
-- **Hidden Markov Model**: Regime detection from market data
-- **Regime Shift Detection**: Adaptive strategy based on market conditions
-- **Kelly Criterion**: Dynamic position sizing with regime adjustments
-- **Monte Carlo Simulation**: Risk analysis and outcome prediction
-- **Self-Healing Agent**: Automatic vulnerability detection and remediation
-- **Multi-LLM Support**: OpenRouter integration with reasoning models
-- **Vanity Wallets**: Unique `gam...` addresses per user
-- **On-chain Settlement**: Solana-based execution via DFlow
-
-## User Flow
-
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                                                                 │
-│  1. LOGIN → Vanity wallet generated (gam... prefix)             │
-│                                                                 │
-│  2. DEPOSIT → Send SOL/USDC to agent wallet                     │
-│             → External wallet auto-registered                   │
-│                                                                 │
-│  3. TRADE → "Buy YES on election market"                        │
-│           → Agent executes via DFlow on Kalshi                  │
-│                                                                 │
-│  4. WITHDRAW → "Pay me back" / "Repay"                          │
-│              → Agent sends to registered wallet                 │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                             │
+│   "Buy YES on election market"                                              │
+│                                                                             │
+│         │                                                                   │
+│         ▼                                                                   │
+│   ┌───────────┐    ┌───────────┐    ┌───────────┐    ┌───────────┐        │
+│   │  Wallet   │    │   Risk    │    │  Trading  │    │  Execute  │        │
+│   │  Check    │───▶│  Analysis │───▶│  Decision │───▶│  on-chain │        │
+│   └───────────┘    └───────────┘    └───────────┘    └───────────┘        │
+│                                                                             │
+│   "Executed 100 YES @ $0.65 | Kelly: 8% | VaR95: $12.50"                   │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
+
+---
+
+## Features
+
+### Multi-Agent System
+- 8 Specialized Agents: Wallet, Trading, Risk, Simulation, Analytics, Intelligence, Solana, Market Discovery
+- Kafka-based Communication: Reliable message passing with dead-letter queue
+- Parallel Execution: Agents work concurrently for faster response times
+
+### Quantitative Methods
+- Hidden Markov Model (HMM): Regime detection from market data
+- Kelly Criterion: Optimal position sizing with regime adjustments
+- Monte Carlo Simulation: 10,000 iteration risk analysis
+- Stress Testing: 6 predefined scenarios (Black Swan, Flash Crash, etc.)
+
+### Continuous Learning
+- 24/7 Learning Daemon: Automatic model retraining
+- Self-Healing Agent: Vulnerability detection and auto-remediation
+- Adaptive Strategies: Regime-based strategy switching
+
+### Market Intelligence
+- News Aggregation: Google News RSS + Firecrawl scraping
+- Sentiment Analysis: Multi-LLM powered analysis
+- Signal Generation: Combined news + liquidity + sentiment signals
+
+### DFlow Integration
+- On-chain Settlement: Solana-based execution
+- Token Swaps: SOL/USDC via DFlow Trade API
+- Sync/Async Execution: Atomic and multi-transaction support
+
+### Secure Wallet System
+- Vanity Addresses: Unique `gam...` prefix per user
+- Auto-registration: External wallet captured from deposits
+- Encrypted Storage: AES-256 key encryption
+
+---
 
 ## Architecture
 
 ```
-                    ┌──────────────────┐
-                    │   HTTP API :3000 │
-                    └────────┬─────────┘
-                             │
-                    ┌────────▼─────────┐
-                    │  Kafka Cluster   │
-                    └────────┬─────────┘
-                             │
-    ┌────────┬───────┬───────┼───────┬────────┬────────┐
-    ▼        ▼       ▼       ▼       ▼        ▼        ▼
-┌───────┐┌───────┐┌───────┐┌───────┐┌───────┐┌───────┐┌───────┐
-│Market ││Trading││Analyt.││Simul. ││ Risk  ││Solana ││Wallet │
-│Discov.││       ││       ││       ││       ││       ││       │
-└───┬───┘└───┬───┘└───┬───┘└───┬───┘└───┬───┘└───┬───┘└───┬───┘
-    │        │        │        │        │        │        │
-    └────────┴────────┴────────┴────────┴────────┴────────┘
-                             │
-         ┌───────────────────┼───────────────────┐
-         ▼                   ▼                   ▼
-   ┌──────────┐       ┌──────────┐       ┌──────────┐
-   │  Kalshi  │       │  DFlow   │       │ Supabase │
-   │   API    │       │   API    │       │          │
-   └──────────┘       └──────────┘       └──────────┘
+                              ┌──────────────────┐
+                              │   HTTP API :3000 │
+                              └────────┬─────────┘
+                                       │
+                              ┌────────▼─────────┐
+                              │  Kafka Cluster   │
+                              └────────┬─────────┘
+                                       │
+       ┌────────┬────────┬─────────────┼─────────────┬────────┬────────┐
+       ▼        ▼        ▼             ▼             ▼        ▼        ▼
+   ┌───────┐┌───────┐┌───────┐   ┌───────────┐   ┌───────┐┌───────┐┌───────┐
+   │Wallet ││Trading││ Risk  │   │Orchestrator│  │Simul. ││Intel. ││Solana │
+   │ Agent ││ Agent ││ Agent │   │            │  │ Agent ││ Agent ││ Agent │
+   └───┬───┘└───┬───┘└───┬───┘   └─────┬─────┘  └───┬───┘└───┬───┘└───┬───┘
+       │        │        │             │             │        │        │
+       └────────┴────────┴─────────────┼─────────────┴────────┴────────┘
+                                       │
+            ┌──────────────────────────┼──────────────────────────┐
+            ▼                          ▼                          ▼
+      ┌──────────┐              ┌──────────┐              ┌──────────┐
+      │  Kalshi  │              │  DFlow   │              │ Supabase │
+      │   API    │              │Trade API │              │    DB    │
+      └──────────┘              └──────────┘              └──────────┘
 ```
 
-## Agents
+### Agent Responsibilities
 
 | Agent | Purpose | Key Tools |
 |-------|---------|-----------|
-| **Intelligence** | News & sentiment analysis | `search_news`, `get_market_intelligence`, `analyze_sentiment` |
-| **Wallet** | Deposits & withdrawals | `check_balance`, `withdraw_to_user`, `fund_kalshi` |
-| **Trading** | Execute trades via DFlow | `get_quote`, `execute_trade` |
-| **Simulation** | Monte Carlo & stress tests | `run_monte_carlo`, `run_stress_test` |
-| **Risk** | VaR, position sizing | `calculate_risk_metrics`, `calculate_position_size` |
-| **Solana** | On-chain operations | `swap_tokens`, `transfer_sol`, `stake_sol` |
-| **Analytics** | Market analysis | `analyze_market_trend`, `compare_markets` |
-| **Market Discovery** | Find markets | `list_markets`, `get_market_details` |
+| Orchestrator | Route requests, synthesize responses | Router LLM, Kafka dispatch |
+| Wallet | Deposits, withdrawals, balances | `check_balance`, `withdraw_to_user` |
+| Trading | Execute trades via DFlow | `get_quote`, `execute_trade` |
+| Risk | VaR, position sizing | `calculate_risk_metrics`, `position_size` |
+| Simulation | Monte Carlo, stress tests | `run_monte_carlo`, `stress_test` |
+| Intelligence | News, sentiment, signals | `search_news`, `analyze_sentiment` |
+| Solana | On-chain operations | `swap_tokens`, `transfer_sol` |
+| Analytics | Market analysis | `analyze_trend`, `compare_markets` |
+
+---
 
 ## Quick Start
 
-### 1. Install & Configure
+### Prerequisites
+
+- Node.js >= 20.0.0
+- Docker & Docker Compose
+- API Keys: OpenRouter, Kalshi, DFlow, Supabase
+
+### Installation
 
 ```bash
+git clone https://github.com/your-org/gambit.git
+cd gambit
 npm install
 cp .env.example .env
-# Edit .env with your keys
 ```
 
-### 2. Start Gambit Learning Daemon
+### Configuration
 
-```bash
-npm run start:daemon
+```env
+# Required
+OPENROUTER_API_KEY=sk-or-v1-...
+KALSHI_API_KEY=your-kalshi-key
+KALSHI_PRIVATE_KEY=-----BEGIN RSA PRIVATE KEY-----...
+DFLOW_API_KEY=your-dflow-key
+SUPABASE_URL=https://xxx.supabase.co
+SUPABASE_SERVICE_KEY=eyJ...
+SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
+
+# Optional
+FIRECRAWL_API_KEY=fc-...
+LANGSMITH_API_KEY=lsv2_pt_...
 ```
 
-This starts the 24/7 learning daemon that:
-- Retrains HMM every 6 hours
-- Updates regime detection every hour
-- Recalibrates Kelly every 30 minutes
-- Runs Monte Carlo simulations every 15 minutes
-- Monitors and fixes vulnerabilities
-
-### 3. Start Services
+### Start Services
 
 ```bash
-# Kafka
+# Infrastructure
 docker-compose up -d
 
-# API Server
+# Learning daemon
+npm run start:daemon
+
+# API server
 npm run start:api
 
-# Workers (each in separate terminal)
+# Orchestrator
 npm run start:orchestrator
-npm run start:wallet
-npm run start:trading
-npm run start:simulation
-npm run start:risk
-npm run start:solana
-npm run start:analytics
-npm run start:market-discovery
-npm run start:intelligence
-npm run start:health
-npm run start:dlq
+
+# Agent workers
+npm run start:wallet &
+npm run start:trading &
+npm run start:risk &
+npm run start:simulation &
+npm run start:intelligence &
+npm run start:solana &
 ```
 
-## API Endpoints
+### LangGraph Studio
 
-### Auth
 ```bash
-# Login (creates vanity wallet)
+npm run langgraph:dev
+# Open: https://smith.langchain.com/studio?baseUrl=http://localhost:2024
+```
+
+---
+
+## Documentation
+
+| Document | Description |
+|----------|-------------|
+| [PRD](docs/PRD.md) | Product Requirements Document |
+| [Pipeline](docs/PIPELINE.md) | Agent hierarchy and data flow |
+| [Setup](SETUP.md) | Detailed setup instructions |
+
+---
+
+## API
+
+### Authentication
+
+```bash
 POST /auth/login
+Content-Type: application/json
+
 {"userId": "user123", "email": "user@example.com"}
-
-# Get user info
-GET /auth/me
-Header: X-Session-Id: <sessionId>
 ```
 
-### Wallet
+Response:
+```json
+{
+  "sessionId": "sess_abc123",
+  "wallet": { "address": "gamXyz..." }
+}
+```
+
+### Chat Interface
+
 ```bash
-# Get balance
-GET /wallet/balance
+POST /api/chat
+X-Session-Id: sess_abc123
+Content-Type: application/json
 
-# Get deposit address
-GET /wallet/deposit-address
-
-# Withdraw
-POST /wallet/withdraw
-{"amount": 10, "token": "USDC"}
-
-# Transaction history
-GET /wallet/transactions
+{"query": "Buy YES on PRES-2024 for $100"}
 ```
+
+Response:
+```json
+{
+  "response": "Executed 100 YES @ $0.65...",
+  "agents": ["wallet", "risk", "trading"]
+}
+```
+
+### Wallet Operations
+
+```
+GET  /wallet/balance           # Check balance
+GET  /wallet/deposit-address   # Get deposit address
+POST /wallet/withdraw          # Withdraw funds
+GET  /wallet/transactions      # Transaction history
+```
+
+---
 
 ## Example Commands
 
+**Wallet**
 ```
 "What's my balance?"
 "Show my deposit address"
 "Withdraw 10 USDC"
 "Pay me back"
-"Fund Kalshi with 50 USDC"
+```
+
+**Trading**
+```
 "Buy YES on PRES-2024 for $100"
-"Run Monte Carlo on FED-RATE with $1000 position"
+"Get quote for election market"
+"Fund Kalshi with 50 USDC"
+```
+
+**Analysis**
+```
+"Run Monte Carlo on FED-RATE"
 "What's my VaR at 95%?"
 "Stress test my portfolio"
 ```
 
-## Environment Variables
-
-```env
-# Required
-OPENAI_API_KEY=sk-...
-SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
-SUPABASE_URL=https://xxx.supabase.co
-SUPABASE_SERVICE_KEY=eyJ...
-KAFKA_BROKERS=localhost:9092
-
-# Optional
-KALSHI_DEPOSIT_ADDRESS=...
-API_PORT=3000
-HEALTH_PORT=3001
-DLQ_PORT=3002
+**Intelligence**
+```
+"Search news about Fed rate decision"
+"What's the sentiment on crypto markets?"
+"Compare PRES-2024 and FED-RATE markets"
 ```
 
-## Gambit Core Architecture
+---
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                         GAMBIT LEARNING DAEMON                              │
-│                    (Continuous Learning & Self-Healing)                     │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐             │
-│  │  HMM Trainer    │  │ Regime Detector │  │ Kelly Calibrator│             │
-│  │  (6h interval)  │  │  (1h interval)  │  │ (30m interval)  │             │
-│  └────────┬────────┘  └────────┬────────┘  └────────┬────────┘             │
-│           │                    │                    │                       │
-│           └────────────────────┼────────────────────┘                       │
-│                                │                                            │
-│                    ┌───────────▼───────────┐                               │
-│                    │   Model Persistence   │                               │
-│                    │     (Supabase)        │                               │
-│                    └───────────────────────┘                               │
-│                                                                             │
-│  ┌─────────────────────────────────────────────────────────────────────┐   │
-│  │                    SELF-HEALING AGENT                               │   │
-│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐                 │   │
-│  │  │ Vuln Logger │→ │ Code Review │→ │ Auto-Fixer  │                 │   │
-│  │  └─────────────┘  └─────────────┘  └─────────────┘                 │   │
-│  └─────────────────────────────────────────────────────────────────────┘   │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘
-                                    │
-                    ┌───────────────┼───────────────┐
-                    ▼               ▼               ▼
-            ┌──────────────┐ ┌──────────────┐ ┌──────────────┐
-            │ Monte Carlo  │ │ Stress Test  │ │ Risk Metrics │
-            │  Simulator   │ │   Engine     │ │  Calculator  │
-            └──────────────┘ └──────────────┘ └──────────────┘
-```
-
-## LangSmith Studio
-
-Gambit graphs are compatible with LangSmith Studio for visual debugging and testing.
-
-### Start Local Server
-
-```bash
-# Start LangGraph dev server
-npm run langgraph:dev
-
-# With tunnel (for Safari)
-npm run langgraph:studio
-```
-
-Then open: `https://smith.langchain.com/studio/?baseUrl=http://127.0.0.1:2024`
-
-### Available Graphs
+## LangGraph Workflows
 
 | Graph | Description | Input |
 |-------|-------------|-------|
-| `market_intel` | Market intelligence analysis | `{ ticker: "PRES-2024" }` |
-| `news_analysis` | News search and sentiment | `{ query: "election polls" }` |
-| `trading` | Full trading decision | `{ ticker: "...", portfolioValue: 10000 }` |
+| `trading` | Full trading decision pipeline | `{ ticker, portfolioValue }` |
+| `market_intel` | Market intelligence analysis | `{ ticker }` |
+| `news_analysis` | News search and sentiment | `{ query }` |
+| `dflow_swap` | Token swap with analysis | `{ inputToken, outputToken, amount }` |
 
-### Graph Workflows
+```javascript
+import { graph } from "./src/graphs/trading.js";
 
+const result = await graph.invoke({
+  ticker: "PRES-2024",
+  portfolioValue: 10000,
+  riskTolerance: 0.02,
+});
+
+// { action: "BUY", side: "yes", size: 80, confidence: 0.75 }
 ```
-market_intel:    fetchMarket → fetchNews → analyze → generateSignal
-news_analysis:   search → fetch → analyze → aggregate → summarize
-trading:         fetchMarket → detectRegime → runSimulation → calculateKelly → makeDecision
-```
+
+---
 
 ## Multi-LLM System
 
-Gambit uses OpenRouter for multi-model support:
-
-### Available Models
-
-| Model | ID | Reasoning | Cost |
-|-------|-----|-----------|------|
-| DeepSeek V3.2 | `deepseek/deepseek-v3.2` | ✅ | Low |
-| Nemotron 3 | `nvidia/nemotron-3-nano-30b-a3b:free` | ✅ | Free |
-| Devstral | `mistralai/devstral-2512:free` | ❌ | Free |
-| DeepSeek NEX | `nex-agi/deepseek-v3.1-nex-n1:free` | ❌ | Free |
-| GPT-4o | `openai/gpt-4o` | ❌ | High |
-| Claude Sonnet 4 | `anthropic/claude-sonnet-4` | ❌ | High |
-
-### Task-Based Model Selection
+| Task | Primary Model | Fallback |
+|------|---------------|----------|
+| Reasoning | DeepSeek V3.2 | Nemotron 3 (free) |
+| Analysis | GPT-4o | Gemini Pro |
+| Sentiment | Claude Sonnet 4 | DeepSeek V3 |
+| Code | Devstral (free) | DeepSeek NEX |
 
 ```javascript
-import { getMultiLLM } from "./llm/index.js";
+import { getMultiLLM } from "./src/llm/index.js";
 
 const llm = getMultiLLM({ preferFree: true });
 
 // Simple completion
 const result = await llm.complete("Analyze this market...");
 
-// With reasoning (uses DeepSeek V3 or Nemotron)
-const reasoned = await llm.reason("Should I buy YES on this market?");
-console.log(reasoned.reasoning); // Step-by-step reasoning
+// With reasoning
+const reasoned = await llm.reason("Should I buy YES?");
 
-// Multi-turn reasoning chain
-const chain = await llm.reasonChain(
-  "Analyze election market PRES-2024",
-  ["What about recent polls?", "Final recommendation?"]
-);
-
-// Sentiment analysis (optimized model)
-const sentiment = await llm.analyzeSentiment(newsText, { marketTitle: "..." });
+// Sentiment analysis
+const sentiment = await llm.analyzeSentiment(newsText);
 ```
 
-### Automatic Fallbacks
+---
 
-If a model fails, Gambit automatically falls back:
-1. Premium → Medium tier → Free tier
-2. Reasoning models have dedicated fallback chain
+## Quantitative Engine
 
-## Intelligence System
-
-The Intelligence Agent provides:
-
-- **Firecrawl Integration**: Professional web scraping with structured extraction
-- **LangGraph Workflows**: Multi-step agent workflows for analysis
-- **News Search**: Search Google News for relevant articles
-- **Sentiment Analysis**: Multi-LLM powered sentiment analysis
-- **Market Intelligence**: Combined news + liquidity + sentiment signals
-
-### LangGraph Workflows
+### Hidden Markov Model
 
 ```javascript
-import { analyzeNewsWorkflow, analyzeMarketWorkflow, scanMarketsWorkflow } from "./intelligence/workflows.js";
+import { HiddenMarkovModel } from "./src/quant/hmm.js";
 
-// News analysis workflow (search → scrape → analyze)
-const newsResult = await analyzeNewsWorkflow("election polls 2024");
-console.log(newsResult.sentiment); // { dominant: "positive", confidence: 0.8 }
-
-// Market intelligence workflow (market data → news → analysis → signal)
-const marketResult = await analyzeMarketWorkflow("PRES-2024");
-console.log(marketResult.signal); // { action: "BUY", side: "yes", confidence: 0.75 }
-
-// Scan multiple markets
-const scan = await scanMarketsWorkflow(["PRES-2024", "FED-RATE", "GDP-Q1"]);
-console.log(scan.topPick); // Best trading opportunity
+const hmm = new HiddenMarkovModel({ nStates: 3 });
+hmm.train(historicalReturns);
+const regime = hmm.predict(recentReturns);
+// { state: "BULL", probability: 0.85 }
 ```
-
-### Firecrawl Features
-
-```javascript
-import { scrapeUrl, extractNewsArticle, crawlSite } from "./intelligence/firecrawl.js";
-
-// Scrape single URL
-const page = await scrapeUrl("https://example.com");
-
-// Extract structured news data
-const article = await extractNewsArticle("https://news.example.com/article");
-console.log(article.data); // { title, author, sentiment, topics, ... }
-
-// Crawl entire site
-const site = await crawlSite("https://example.com", { limit: 10 });
-```
-
-### Signal Generation
-
-Signals are generated based on:
-1. **Sentiment Score** (60%): Aggregated news sentiment
-2. **Liquidity Score** (20%): Order book depth and volume
-3. **Spread Score** (20%): Bid-ask spread quality
-
-## Quantitative Methods
-
-### Hidden Markov Model (HMM)
-- 3 hidden states: BULL, SIDEWAYS, BEAR
-- Trained on historical returns using Baum-Welch algorithm
-- Viterbi decoding for state sequence prediction
-
-### Regime Detection
-- Combines HMM, volatility analysis, and trend strength
-- Outputs: RISK_ON, NEUTRAL, RISK_OFF
-- Automatic strategy adjustment based on regime
 
 ### Kelly Criterion
-- Regime-adjusted position sizing
-- Volatility-aware multipliers
-- Half-Kelly default for conservative sizing
+
+```javascript
+import { KellyCriterion } from "./src/quant/kelly.js";
+
+const kelly = new KellyCriterion();
+const sizing = kelly.calculateRegimeAdjustedKelly({
+  currentPrice: 0.65,
+  estimatedProbability: 0.72,
+  side: "yes",
+  regime: "RISK_ON",
+});
+// { adjustedKelly: 0.08, recommendedBetSize: 800 }
+```
 
 ### Monte Carlo Simulation
-- GBM price path simulation
-- VaR/CVaR calculation
-- Stress testing across 6 scenarios
+
+```javascript
+import { MonteCarloSimulator } from "./src/simulation/monte-carlo.js";
+
+const simulator = new MonteCarloSimulator({ iterations: 10000 });
+const result = await simulator.runSimulation({
+  ticker: "PRES-2024",
+  initialPrice: 0.65,
+  volatility: 0.3,
+  positionSize: 1000,
+});
+// { var95: -125, var99: -180, sharpeRatio: 1.2, winRate: 0.58 }
+```
+
+---
 
 ## Project Structure
 
 ```
-src/
-├── agents/              # Agent definitions
-├── api/                 # HTTP API (auth, server)
-├── auth/                # Session, vanity wallet
-├── kafka/               # Kafka client & messages
-├── graphs/              # LangGraph workflows (Studio compatible)
-│   ├── market-intel.js  # Market intelligence graph
-│   ├── news-analysis.js # News analysis graph
-│   └── trading.js       # Trading decision graph
-├── llm/                 # Multi-LLM system
-│   ├── openrouter.js    # OpenRouter client
-│   ├── multi-llm.js     # LLM orchestrator
-│   └── index.js
-├── intelligence/        # News scraping & sentiment
-│   ├── scraper.js       # Basic web crawler
-│   ├── firecrawl.js     # Firecrawl integration
-│   ├── workflows.js     # LangGraph workflows
-│   ├── sentiment.js     # Sentiment analysis
-│   └── market-intel.js  # Market intelligence
-├── learning/            # Continuous learning system
-│   ├── daemon.js        # Main ALADDIN daemon
-│   ├── trainer.js       # Continuous model trainer
-│   ├── self-healing-agent.js
-│   └── vulnerability-logger.js
-├── mcp/                 # MCP server adapter
-├── plugins/             # Plugin system (Token, DeFi)
-├── quant/               # Quantitative methods
-│   ├── hmm.js           # Hidden Markov Model
-│   ├── regime-detector.js
-│   └── kelly.js         # Kelly Criterion
-├── simulation/          # Monte Carlo, stress tests
-├── solana/              # Solana client
-├── supabase/            # DB client & schema
-├── utils/               # Retry, health, DLQ
-├── wallet/              # Treasury management
-└── workers/             # Kafka workers
+gambit/
+├── src/
+│   ├── agents/           # Agent definitions (8 agents)
+│   ├── api/              # HTTP API server
+│   ├── auth/             # Session & vanity wallet
+│   ├── graphs/           # LangGraph workflows
+│   ├── intelligence/     # News, sentiment, Firecrawl
+│   ├── kafka/            # Message broker client
+│   ├── learning/         # Continuous learning daemon
+│   ├── llm/              # Multi-LLM orchestrator
+│   ├── mcp/              # MCP server adapter
+│   ├── plugins/          # Plugin system (Token, DeFi)
+│   ├── quant/            # HMM, regime, Kelly
+│   ├── simulation/       # Monte Carlo, stress tests
+│   ├── solana/           # Solana client
+│   ├── supabase/         # Database client
+│   ├── utils/            # Retry, health, DLQ
+│   ├── wallet/           # Treasury management
+│   └── workers/          # Kafka workers
+├── docs/
+│   ├── PRD.md            # Product requirements
+│   └── PIPELINE.md       # Architecture docs
+├── docker-compose.yml
+├── langgraph.json
+└── package.json
 ```
 
-## Plugin System
-
-Gambit uses a plugin architecture inspired by solana-agent-kit:
-
-### Token Plugin
-- `GET_BALANCE` - Get SOL balance
-- `GET_TOKEN_BALANCE` - Get SPL token balance
-- `GET_ALL_BALANCES` - Get all balances
-- `TRANSFER` - Transfer SOL/tokens
-- `TRADE` - Swap via Jupiter
-
-### DeFi Plugin
-- `GET_KALSHI_QUOTE` - Get trade quote
-- `EXECUTE_KALSHI_TRADE` - Execute trade via DFlow
-- `GET_KALSHI_POSITIONS` - Get user positions
-- `LIST_KALSHI_MARKETS` - List markets
-- `GET_KALSHI_MARKET` - Get market details
-- `GET_KALSHI_ORDERBOOK` - Get orderbook
-
-### Creating Custom Plugins
-
-```javascript
-import { createPlugin, createAction } from "./plugins/base.js";
-import { z } from "zod";
-
-const myAction = createAction({
-  name: "MY_ACTION",
-  description: "Does something cool",
-  schema: z.object({ param: z.string() }),
-  handler: async (ctx, input) => {
-    return { result: input.param };
-  },
-});
-
-const MyPlugin = createPlugin({
-  name: "my-plugin",
-  methods: { myTool },
-  actions: [myAction],
-});
-```
-
-## MCP Server
-
-Run Gambit as an MCP server for AI assistants:
-
-```bash
-npm run start:mcp
-```
-
-Configure in your MCP client:
-```json
-{
-  "mcpServers": {
-    "gambit": {
-      "command": "node",
-      "args": ["src/mcp/server.js"],
-      "env": {
-        "SOLANA_RPC_URL": "https://api.mainnet-beta.solana.com",
-        "KALSHI_API_KEY": "your-key",
-        "DFLOW_API_KEY": "your-key"
-      }
-    }
-  }
-}
-```
-
-## Security
-
-- Vanity wallets generated per user (`gam...` prefix)
-- External wallet auto-registered from first deposit
-- Private keys encrypted in Supabase (use KMS in production)
-- Row Level Security on all user tables
-- Session-based authentication
+---
 
 ## Monitoring
 
-- **Health**: `http://localhost:3001/health`
-- **DLQ**: `http://localhost:3002/dlq`
-- **Kafka UI**: `http://localhost:8080`
+| Endpoint | Purpose |
+|----------|---------|
+| `http://localhost:3001/health` | System health check |
+| `http://localhost:3002/dlq` | Dead letter queue status |
+| LangSmith Studio | Graph tracing and debugging |
+
+---
+
+## Security
+
+- Wallet Isolation: Each user has dedicated vanity wallet
+- Key Encryption: AES-256 encrypted private keys
+- Row Level Security: Supabase RLS on all tables
+- Session Management: JWT with expiration
+- API Key Protection: Environment variables only
+
+---
 
 ## License
 
-Apache-2.0
+Apache 2.0 - see [LICENSE](LICENSE) for details.
