@@ -18,6 +18,8 @@
     "start:health": "node src/workers/health.worker.js",
     "start:dlq": "node src/workers/dlq.worker.js",
     "start:intelligence": "node src/workers/intelligence.worker.js",
+    "start:search-indexer": "node src/workers/search-indexer.worker.js",
+    "start:kalshi-stream": "node src/workers/kalshi-stream.worker.js",
     "start:api": "node src/api/server.js",
     "dev": "node --watch src/index.js",
     "langgraph:dev": "npx @langchain/langgraph-cli dev",
@@ -35,8 +37,10 @@
     "bs58": "^6.0.0",
     "dotenv": "^16.4.0",
     "kafkajs": "^2.2.4",
+    "kalshi-typescript": "^3.4.0",
     "openai": "^4.70.0",
     "uuid": "^9.0.0",
+    "ws": "^8.18.0",
     "zod": "^3.23.0"
   }
 }

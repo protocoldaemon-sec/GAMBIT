@@ -24,6 +24,9 @@ export const TOPICS = {
   RESPONSES: "agent.responses",
   DEAD_LETTER: "agent.dead-letter",
   HEALTH: "agent.health",
+  MARKET_DATA: "market.data",
+  INTELLIGENCE: "agent.intelligence",
+  SEARCH: "agent.search",
 };
 
 export async function initKafka() {
@@ -50,3 +53,20 @@ export async function initKafka() {
 }
 
 export { kafka };
+
+/**
+ * Get connected Kafka producer
+ */
+export async function getKafkaProducer() {
+  await producer.connect();
+  return producer;
+}
+
+/**
+ * Get connected Kafka consumer
+ */
+export async function getKafkaConsumer(groupId) {
+  const cons = kafka.consumer({ groupId });
+  await cons.connect();
+  return cons;
+}

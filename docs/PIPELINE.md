@@ -134,9 +134,12 @@ Dokumentasi lengkap hierarki dan alur end-to-end sistem multi-agent Gambit.
 | `agent.simulation` | Monte Carlo sims | 3 |
 | `agent.risk` | Risk calculations | 3 |
 | `agent.solana` | On-chain ops | 3 |
+| `agent.intelligence` | News & sentiment | 3 |
+| `agent.search` | Search operations | 3 |
 | `agent.responses` | Agent responses | 3 |
 | `agent.dead-letter` | Failed messages | 3 |
 | `agent.health` | Health checks | 1 |
+| `market.data` | Real-time market data (WebSocket) | 3 |
 
 
 ## Agent Detail
@@ -782,6 +785,20 @@ Dokumentasi lengkap hierarki dan alur end-to-end sistem multi-agent Gambit.
 │  └─────────────────────────────────────────────────────────────────────────────┘    │
 │                                                                                      │
 │  ┌─────────────────────────────────────────────────────────────────────────────┐    │
+│  │  KALSHI WEBSOCKET                                                           │    │
+│  │  URL: wss://api.elections.kalshi.com/trade-api/ws/v2                        │    │
+│  │                                                                             │    │
+│  │  Channels:                                                                  │    │
+│  │  • orderbook_delta → Real-time orderbook updates                            │    │
+│  │  • ticker → Price/volume updates                                            │    │
+│  │  • trade → Public trade feed                                                │    │
+│  │  • fill → User's executed trades (authenticated)                            │    │
+│  │                                                                             │    │
+│  │  Auth: RSA-PSS signature in URL params                                      │    │
+│  │  Auto-reconnect with exponential backoff                                    │    │
+│  └─────────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                      │
+│  ┌─────────────────────────────────────────────────────────────────────────────┐    │
 │  │  FIRECRAWL API                                                              │    │
 │  │  Base URL: https://api.firecrawl.dev                                        │    │
 │  │                                                                             │    │
@@ -811,7 +828,7 @@ Dokumentasi lengkap hierarki dan alur end-to-end sistem multi-agent Gambit.
 
 ```bash
 # 1. Infrastructure
-docker-compose up -d  # Kafka + Zookeeper
+docker-compose up -d  # Kafka + Zookeeper + Elasticsearch
 
 # 2. Learning Daemon (background)
 npm run start:daemon
@@ -832,11 +849,15 @@ npm run start:intelligence &
 npm run start:solana &
 npm run start:market-discovery &
 
-# 6. Support Workers
+# 6. Data Stream Workers
+npm run start:kalshi-stream &
+npm run start:search-indexer &
+
+# 7. Support Workers
 npm run start:health &
 npm run start:dlq &
 
-# 7. LangGraph Studio (optional)
+# 8. LangGraph Studio (optional)
 npm run langgraph:dev
 ```
 

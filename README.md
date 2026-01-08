@@ -51,9 +51,18 @@ Gambit is an AI-powered quantitative trading system for prediction markets on [K
 - Signal Generation: Combined news + liquidity + sentiment signals
 
 ### DFlow Integration
-- On-chain Settlement: Solana-based execution
-- Token Swaps: SOL/USDC via DFlow Trade API
+- Swap API: Imperative and declarative token swaps on Solana
+- Prediction Market Metadata: Events, markets, orderbooks, trades from Kalshi
+- WebSocket Streaming: Real-time prices, trades, orderbook updates
+- On-chain Settlement: Solana-based execution with Jito MEV protection
 - Sync/Async Execution: Atomic and multi-transaction support
+
+### Kalshi API Integration
+- Official TypeScript SDK: Full API coverage with type safety
+- WebSocket Streaming: Real-time orderbook, ticker, trade, and fill updates
+- Sub-penny Pricing: Support for 4-decimal precision pricing
+- Error Handling: Comprehensive retry strategies with exponential backoff
+- Exchange Status: Automatic trading hours and maintenance detection
 
 ### Secure Wallet System
 - Vanity Addresses: Unique `gam...` prefix per user
@@ -259,6 +268,218 @@ GET  /wallet/transactions      # Transaction history
 "Search news about Fed rate decision"
 "What's the sentiment on crypto markets?"
 "Compare PRES-2024 and FED-RATE markets"
+```
+
+---
+
+## DFlow API
+
+### Swap API (Imperative)
+
+```javascript
+import { DFlowClient, TOKENS } from "./src/plugins/defi/tools/dflow.js";
+
+const client = new DFlowClient();
+
+// Get quote for token swap
+const quote = await client.getQuote({
+  inputMint: TOKENS.SOL,
+  outputMint: TOKENS.USDC,
+  amount: 1_000_000_000, // 1 SOL in lamports
+  slippageBps: 50,
+});
+
+// Execute swap with monitoring
+const result = await client.swap({
+  inputMint: TOKENS.SOL,
+  outputMint: TOKENS.USDC,
+  amount: 1_000_000_000,
+  slippageBps: 50,
+});
+// { status: "closed", signature: "...", fills: [...] }
+```
+
+### Declarative Swaps (Intent-based)
+
+```javascript
+// Better for larger orders with less slippage
+const intentQuote = await client.getIntentQuote({
+  inputMint: TOKENS.USDC,
+  outputMint: TOKENS.SOL,
+  amount: 100_000_000, // 100 USDC
+  slippageBps: 30,
+});
+
+// Submit intent swap
+const result = await client.submitIntentSwap(intentQuote);
+```
+
+### Prediction Market Metadata
+
+```javascript
+// Search events
+const events = await client.searchEvents("election");
+
+// Get markets for an event
+const markets = await client.getMarkets({ eventTicker: "PRES-2024" });
+
+// Get orderbook
+const orderbook = await client.getOrderbook("PRES-2024-DJT");
+
+// Get live data from Kalshi
+const liveData = await client.getLiveData({ eventTicker: "PRES-2024" });
+
+// Get market candlesticks
+const candles = await client.getMarketCandlesticks("PRES-2024-DJT", {
+  interval: "1h",
+});
+```
+
+### WebSocket Streaming
+
+```javascript
+import { DFlowWebSocket } from "./src/plugins/defi/tools/dflow.js";
+
+const ws = new DFlowWebSocket();
+await ws.connect();
+
+// Subscribe to all price updates
+ws.subscribePrices(true);
+
+// Subscribe to specific markets
+ws.subscribeTrades(["PRES-2024-DJT", "FED-RATE-JAN"]);
+ws.subscribeOrderbook(["PRES-2024-DJT"]);
+
+// Handle events
+ws.on("price", (data) => {
+  console.log(`Price update: ${data.ticker} YES: ${data.yesBid}`);
+});
+
+ws.on("trade", (data) => {
+  console.log(`Trade: ${data.ticker} ${data.count} @ ${data.price}`);
+});
+
+ws.on("orderbook", (data) => {
+  console.log(`Orderbook update: ${data.ticker}`);
+});
+```
+
+### Error Handling
+
+```javascript
+import { DFlowError } from "./src/plugins/defi/tools/dflow.js";
+
+try {
+  await client.getMarket("INVALID-TICKER");
+} catch (error) {
+  if (error instanceof DFlowError) {
+    switch (error.code) {
+      case "NOT_FOUND":
+        console.log("Market not found");
+        break;
+      case "RATE_LIMIT":
+        console.log(`Rate limited, retry after ${error.details.retryAfter}s`);
+        break;
+      case "AUTH_ERROR":
+        console.log("Check your API key");
+        break;
+    }
+  }
+}
+```
+
+---
+
+## Kalshi API
+
+### REST API
+
+```javascript
+import kalshi from "./src/plugins/defi/tools/kalshi.js";
+
+// Check exchange status before trading
+const status = await kalshi.ensureTradingActive();
+
+// Get markets
+const { markets } = await kalshi.getMarkets(null, { status: "open", limit: 50 });
+
+// Get orderbook with both dollar and cent values
+const orderbook = await kalshi.getOrderbook(null, "PRES-2024-DJT");
+// { yes: [{ price: 0.65, priceCents: 65, quantity: 100 }], ... }
+
+// Get user balance
+const balance = await kalshi.getBalance();
+// { balance: 500.00, balanceCents: 50000, portfolioValue: 1200.00 }
+```
+
+### WebSocket Streaming
+
+```javascript
+import { KalshiWebSocket } from "./src/plugins/defi/tools/kalshi-ws.js";
+
+const ws = new KalshiWebSocket({ environment: "production" });
+await ws.connect();
+
+// Subscribe to real-time updates
+await ws.subscribeOrderbook("PRES-2024-DJT");
+await ws.subscribeTicker("PRES-2024-DJT");
+
+// Handle events
+ws.on("ticker", (data) => {
+  console.log(`${data.ticker}: YES $${data.yesPrice} | NO $${data.noPrice}`);
+});
+
+ws.on("orderbook_delta", (data) => {
+  console.log(`Orderbook update: ${data.delta.side} @ $${data.delta.price}`);
+});
+
+// Get current orderbook state
+const book = ws.getOrderbook("PRES-2024-DJT");
+const bestPrices = ws.getBestPrices("PRES-2024-DJT");
+```
+
+### Error Handling
+
+```javascript
+import { KalshiError, KalshiErrorCodes } from "./src/plugins/defi/tools/kalshi.js";
+
+try {
+  await kalshi.getMarket(null, "INVALID-TICKER");
+} catch (error) {
+  if (error instanceof KalshiError) {
+    switch (error.code) {
+      case "UNKNOWN_SYMBOL":
+        console.log("Market not found");
+        break;
+      case "EXCHANGE_CLOSED":
+        console.log(`Exchange closed until ${error.details.estimatedResume}`);
+        break;
+      case "RATE_LIMIT":
+        console.log(`Rate limited, retry after ${error.details.retryAfter}s`);
+        break;
+    }
+  }
+}
+```
+
+### Sub-penny Pricing
+
+```javascript
+import { 
+  standardCentsToDollars, 
+  dollarsToCents,
+  formatPrice 
+} from "./src/plugins/defi/tools/kalshi.js";
+
+// API returns prices in cents (1-99)
+const priceCents = 65;
+const priceDollars = standardCentsToDollars(priceCents); // 0.65
+
+// Convert back for API calls
+const apiPrice = dollarsToCents(0.65); // 65
+
+// Format for display
+console.log(formatPrice(0.65)); // "$0.65"
 ```
 
 ---
