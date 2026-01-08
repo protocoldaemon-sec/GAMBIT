@@ -57,13 +57,16 @@ export const MODELS = {
 
 // Model selection by task
 export const TASK_MODELS = {
-  REASONING: MODELS.DEEPSEEK_V3,
-  ANALYSIS: MODELS.GEMINI_PRO,
-  CODING: MODELS.DEVSTRAL,
-  GENERAL: MODELS.DEEPSEEK_NEX,
-  SENTIMENT: MODELS.NEMOTRON,
-  DEFAULT: MODELS.DEVSTRAL,
+  REASONING: MODELS.NEMOTRON,      // Free reasoning model
+  ANALYSIS: MODELS.DEVSTRAL,       // Free
+  CODING: MODELS.DEVSTRAL,         // Free
+  GENERAL: MODELS.DEEPSEEK_NEX,    // Free
+  SENTIMENT: MODELS.NEMOTRON,      // Free
+  DEFAULT: MODELS.DEVSTRAL,        // Free
 };
+
+// Free model for agents
+export const FREE_MODEL = MODELS.DEVSTRAL;
 
 /**
  * Create OpenRouter client
@@ -207,6 +210,7 @@ export function selectModel(task, options = {}) {
 export default { 
   MODELS, 
   TASK_MODELS, 
+  FREE_MODEL,
   createClient, 
   getClient, 
   chat, 

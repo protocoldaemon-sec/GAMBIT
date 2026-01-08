@@ -7,9 +7,9 @@
  * 2. User's external wallet (from deposit history)
  * 3. Kalshi deposit address
  */
-import { ChatOpenAI } from "@langchain/openai";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
+import { getFreeAgentModel } from "../llm/index.js";
 import {
   getAgentBalance,
   withdrawSol,
@@ -163,5 +163,5 @@ export const walletAgent = {
   name: "wallet",
   description: "Manages deposits, withdrawals, and balances. Can withdraw to user wallet or deposit to Kalshi.",
   tools: [checkBalance, withdrawToUser, fundKalshi, getHistory, getDepositAddress],
-  model: new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 }),
+  model: getFreeAgentModel(),
 };

@@ -2,9 +2,9 @@
  * Analytics Agent
  * Analyzes market data and provides insights
  */
-import { ChatOpenAI } from "@langchain/openai";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
+import { getFreeAgentModel } from "../llm/index.js";
 
 const analyzeMarketTrend = tool(
   async ({ ticker, timeframe }) => {
@@ -53,5 +53,5 @@ export const analyticsAgent = {
   name: "analytics",
   description: "Analyzes market data and provides insights",
   tools: [analyzeMarketTrend, compareMarkets],
-  model: new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 }),
+  model: getFreeAgentModel(),
 };

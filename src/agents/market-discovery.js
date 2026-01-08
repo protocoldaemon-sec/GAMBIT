@@ -2,9 +2,9 @@
  * Market Discovery Agent
  * Discovers and analyzes prediction markets from Kalshi
  */
-import { ChatOpenAI } from "@langchain/openai";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
+import { getFreeAgentModel } from "../llm/index.js";
 
 const listMarkets = tool(
   async ({ category, status }) => {
@@ -52,5 +52,5 @@ export const marketDiscoveryAgent = {
   name: "market_discovery",
   description: "Discovers and analyzes prediction markets",
   tools: [listMarkets, getMarketDetails],
-  model: new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 }),
+  model: getFreeAgentModel(),
 };

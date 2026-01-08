@@ -509,14 +509,24 @@ const result = await graph.invoke({
 
 ## Multi-LLM System
 
-| Task | Primary Model | Fallback |
-|------|---------------|----------|
-| Reasoning | DeepSeek V3.2 | Nemotron 3 (free) |
-| Analysis | GPT-4o | Gemini Pro |
-| Sentiment | Claude Sonnet 4 | DeepSeek V3 |
-| Code | Devstral (free) | DeepSeek NEX |
+All agents use free models via OpenRouter by default:
+
+| Task | Model | Cost |
+|------|-------|------|
+| All Agents | Devstral | Free |
+| Reasoning | Nemotron 3 Nano | Free |
+| Analysis | Devstral | Free |
+| Sentiment | Nemotron 3 Nano | Free |
+| Code | Devstral | Free |
+| General | DeepSeek NEX | Free |
 
 ```javascript
+import { getFreeAgentModel } from "./src/llm/index.js";
+
+// All agents use free models
+const model = getFreeAgentModel();
+
+// Or use MultiLLM for task-specific selection
 import { getMultiLLM } from "./src/llm/index.js";
 
 const llm = getMultiLLM({ preferFree: true });
@@ -524,7 +534,7 @@ const llm = getMultiLLM({ preferFree: true });
 // Simple completion
 const result = await llm.complete("Analyze this market...");
 
-// With reasoning
+// With reasoning (uses Nemotron 3 - free)
 const reasoned = await llm.reason("Should I buy YES?");
 
 // Sentiment analysis

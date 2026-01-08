@@ -2,9 +2,9 @@
  * Trading Agent
  * Executes trades via DFlow's routing infrastructure
  */
-import { ChatOpenAI } from "@langchain/openai";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
+import { getFreeAgentModel } from "../llm/index.js";
 
 const getQuote = tool(
   async ({ market, side, amount }) => {
@@ -58,5 +58,5 @@ export const tradingAgent = {
   name: "trading",
   description: "Executes trades via DFlow routing",
   tools: [getQuote, executeTrade],
-  model: new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 }),
+  model: getFreeAgentModel(),
 };

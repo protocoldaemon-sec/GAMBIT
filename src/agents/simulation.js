@@ -2,9 +2,9 @@
  * Simulation Agent
  * Runs Monte Carlo simulations and predictions
  */
-import { ChatOpenAI } from "@langchain/openai";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
+import { getFreeAgentModel } from "../llm/index.js";
 import { MonteCarloSimulator } from "../simulation/monte-carlo.js";
 import { StressTestEngine } from "../simulation/stress-test.js";
 
@@ -130,5 +130,5 @@ export const simulationAgent = {
   name: "simulation",
   description: "Runs Monte Carlo simulations and outcome predictions",
   tools: [runMonteCarloSimulation, runStressTest, predictOutcome],
-  model: new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 }),
+  model: getFreeAgentModel(),
 };

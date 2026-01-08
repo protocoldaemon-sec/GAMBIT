@@ -3,9 +3,9 @@
  * Full-text search and analytics powered by Elasticsearch
  * Inspired by OneStop's data discovery patterns
  */
-import { ChatOpenAI } from "@langchain/openai";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
+import { getFreeAgentModel } from "../llm/index.js";
 import { getElasticsearchClient } from "../search/elasticsearch.js";
 
 const es = getElasticsearchClient();
@@ -214,5 +214,5 @@ export const searchAgent = {
     findSimilarMarkets,
     getTrendingTopics,
   ],
-  model: new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 }),
+  model: getFreeAgentModel(),
 };

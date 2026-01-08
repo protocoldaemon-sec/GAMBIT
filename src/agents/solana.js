@@ -2,9 +2,9 @@
  * Solana Agent
  * Handles on-chain operations using native @solana/web3.js
  */
-import { ChatOpenAI } from "@langchain/openai";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
+import { getFreeAgentModel } from "../llm/index.js";
 import { 
   getWalletBalance, 
   getTokenBalance, 
@@ -145,5 +145,5 @@ export const solanaAgent = {
     transferTokenTool,
     getTransactionTool,
   ],
-  model: new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 }),
+  model: getFreeAgentModel(),
 };
